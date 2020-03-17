@@ -253,7 +253,6 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    print("build");
     return Stack(
       alignment: widget.slideDirection == SlideDirection.UP ? Alignment.bottomCenter : Alignment.topCenter,
       children: <Widget>[
