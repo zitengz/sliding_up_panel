@@ -49,6 +49,7 @@ class _HomePageState extends State<HomePage> {
   final double _initFabHeight = 120.0;
   double _fabHeight;
   double _panelHeightOpen;
+  double _panelHeightHalfOpen;
   double _panelHeightClosed = 95.0;
 
   @override
@@ -60,7 +61,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context){
-    _panelHeightOpen = MediaQuery.of(context).size.height * .80;
+    _panelHeightOpen = MediaQuery.of(context).size.height * 1.0;
+    _panelHeightHalfOpen = MediaQuery.of(context).size.height * .70;
 
     return Material(
       child: Stack(
@@ -69,6 +71,7 @@ class _HomePageState extends State<HomePage> {
 
           SlidingUpPanel(
             maxHeight: _panelHeightOpen,
+            midHeight: _panelHeightHalfOpen,
             minHeight: _panelHeightClosed,
             parallaxEnabled: true,
             parallaxOffset: .5,
@@ -78,6 +81,12 @@ class _HomePageState extends State<HomePage> {
             onPanelSlide: (double pos) => setState((){
               _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
             }),
+            onPanelHalfOpened: () {
+              print("Half opened");
+            },
+            onPanelOpened: () {
+              print("Opened");
+            },
           ),
 
           // the fab
