@@ -437,7 +437,23 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
         visualVelocity = -visualVelocity;
 
       if(widget.panelSnapping){
-        _ac.fling(velocity: visualVelocity);
+        if (widget._midOpenRatio > 0.0) {
+          if (visualVelocity > 0) {
+            if (_ac.value < widget._midOpenRatio) {
+              _halfOpen();
+            } else {
+              _open();
+            }
+          } else {
+            if (_ac.value < widget._midOpenRatio) {
+              _close();
+            } else {
+              _halfOpen();
+            }
+          }
+        } else {
+          _ac.fling(velocity: visualVelocity);
+        }
       }else{
         // actual scroll physics will be implemented in a future release
         _ac.animateTo(
@@ -459,7 +475,6 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
       else
         _close();
     }
-
   }
 
   //---------------------------------
