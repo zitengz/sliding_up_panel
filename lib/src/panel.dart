@@ -49,8 +49,8 @@ class SlidingUpPanel extends StatefulWidget {
   /// The height of the sliding panel when fully collapsed.
   final double minHeight;
 
-  /// The height of the sliding panel when half open.
-  final double midHeight;
+  /// The ratio to max height when sliding panel is half open.
+  final double midOpenRatio;
 
   /// The height of the sliding panel when fully open.
   final double maxHeight;
@@ -148,9 +148,6 @@ class SlidingUpPanel extends StatefulWidget {
   /// by default the Panel is open and must be swiped closed by the user.
   final PanelState defaultPanelState;
 
-  //midHeight/maxHeight
-  double _midOpenRatio;
-
   SlidingUpPanel({
     Key key,
     this.panel,
@@ -158,7 +155,7 @@ class SlidingUpPanel extends StatefulWidget {
     this.body,
     this.collapsed,
     this.minHeight = 100.0,
-    this.midHeight = 0.0,
+    this.midOpenRatio = 0.0,
     this.maxHeight = 500.0,
     this.border,
     this.borderRadius,
@@ -187,8 +184,7 @@ class SlidingUpPanel extends StatefulWidget {
     this.isDraggable = true,
     this.slideDirection = SlideDirection.UP,
     this.defaultPanelState = PanelState.CLOSED,
-  }) : _midOpenRatio = maxHeight > minHeight && midHeight > minHeight ? (midHeight - minHeight) / (maxHeight - minHeight) : 0.0,
-      assert(panel != null || panelBuilder != null),
+  }): assert(panel != null || panelBuilder != null),
       assert(0 <= backdropOpacity && backdropOpacity <= 1.0),
       super(key: key);
 
@@ -219,7 +215,7 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
 
       if(widget.onPanelSlide != null) widget.onPanelSlide(_ac.value);
 
-      if(widget.onPanelHalfOpened != null && _ac.value == widget._midOpenRatio && widget._midOpenRatio > 0) widget.onPanelHalfOpened();
+      if(widget.onPanelHalfOpened != null && _ac.value == widget.midOpenRatio && widget.midOpenRatio > 0) widget.onPanelHalfOpened();
 
       if(widget.onPanelOpened != null && _ac.value == 1.0) widget.onPanelOpened();
 
@@ -383,8 +379,8 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
 
   double _getParallax(){
     double v = _ac.value;
-    if (widget._midOpenRatio > 0 && _ac.value >= widget._midOpenRatio) {
-      v = widget._midOpenRatio;
+    if (widget.midOpenRatio > 0 && _ac.value >= widget.midOpenRatio) {
+      v = widget.midOpenRatio;
     }
 
     if(widget.slideDirection == SlideDirection.UP)
@@ -437,15 +433,15 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
         visualVelocity = -visualVelocity;
 
       if(widget.panelSnapping){
-        if (widget._midOpenRatio > 0.0) {
+        if (widget.midOpenRatio > 0.0) {
           if (visualVelocity > 0) {
-            if (_ac.value < widget._midOpenRatio) {
+            if (_ac.value < widget.midOpenRatio) {
               _halfOpen();
             } else {
               _open();
             }
           } else {
-            if (_ac.value < widget._midOpenRatio) {
+            if (_ac.value < widget.midOpenRatio) {
               _close();
             } else {
               _halfOpen();
@@ -468,9 +464,9 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
 
     // check if the controller is already halfway there
     if (widget.panelSnapping) {
-      if(_ac.value > 0.5 + widget._midOpenRatio / 2.0)
+      if(_ac.value > 0.5 + widget.midOpenRatio / 2.0)
         _open();
-      else if (widget._midOpenRatio > 0 && _ac.value > widget._midOpenRatio / 2.0)
+      else if (widget.midOpenRatio > 0 && _ac.value > widget.midOpenRatio / 2.0)
         _halfOpen();
       else
         _close();
@@ -488,8 +484,8 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
 
   //half open the panel
   Future<void> _halfOpen(){
-    if (widget._midOpenRatio > 0) {
-      return _ac.animateTo(widget._midOpenRatio);
+    if (widget.midOpenRatio > 0) {
+      return _ac.animateTo(widget.midOpenRatio);
     } else {
       return _open(); //fully open if midHeight is 0
     }
@@ -501,20 +497,16 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
   }
 
   //hide the panel (completely offscreen)
-  Future<void> _hide(){
-    return _ac.fling(velocity: -1.0).then((x){
-      setState(() {
-        _isPanelVisible = false;
-      });
+  void _hide(){
+    setState(() {
+      _isPanelVisible = false;
     });
   }
 
   //show the panel (in collapsed mode)
-  Future<void> _show(){
-    return _ac.fling(velocity: -1.0).then((x){
-      setState(() {
-        _isPanelVisible = true;
-      });
+  void _show(){
+    setState(() {
+      _isPanelVisible = true;
     });
   }
 
@@ -547,7 +539,7 @@ class _SlidingUpPanelState extends State<SlidingUpPanel> with SingleTickerProvid
 
   //returns whether or not the
   //panel is open
-  bool get _isPanelHalfOpen => widget._midOpenRatio > 0 && _ac.value == widget._midOpenRatio;
+  bool get _isPanelHalfOpen => widget.midOpenRatio > 0 && _ac.value == widget.midOpenRatio;
 
   //returns whether or not the
   //panel is closed
@@ -599,16 +591,16 @@ class PanelController{
   }
 
   /// Hides the sliding panel (i.e. is invisible)
-  Future<void> hide(){
+  void hide(){
     assert(isAttached, "PanelController must be attached to a SlidingUpPanel");
-    return _panelState._hide();
+    _panelState._hide();
   }
 
   /// Shows the sliding panel in its collapsed state
   /// (i.e. "un-hide" the sliding panel)
-  Future<void> show(){
+  void show(){
     assert(isAttached, "PanelController must be attached to a SlidingUpPanel");
-    return _panelState._show();
+    _panelState._show();
   }
 
   /// Animates the panel position to the value.
